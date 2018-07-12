@@ -1,0 +1,14 @@
+{
+  "name": "slam-se",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "csr",
+  "license": "MIT",
+  "dependencies": {
+    "@koa/cors": "^2.2.2",
+    "koa": "^2.5.2",
+    "koa-body": "^4.0.4",
+    "koa-route": "^3.2.0",
+    "koa-static": "^5.0.0"
+  }
+}
