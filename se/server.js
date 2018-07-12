@@ -31,13 +31,33 @@ app.use(route.post('/backend/api/images', async (ctx) => {
         rej(err);
       }
     });
-    wstream.on('finish', function () {
-      ctx.body = { msg: 'success', result: apiName };
+    wstream.on('finish', async function () {
+      const pyData = await createPyProcess();
+      const pyStr = pyData.toString('utf8');
+      ctx.body = { msg: 'success', result: apiName, data: pyStr };
       res();
     });
     reader.pipe(wstream);
   });
 }));
 
-app.listen(3000);
-console.log('listen on 3000');
+app.listen(3000, ()=>console.log('listen on 3000'));
+
+
+function createPyProcess() {
+  return new Promise(function(success, nosuccess) {
+
+    const { spawn } = require('child_process');
+    const pyprog = spawn('python', ['../test.py']);
+
+    pyprog.stdout.on('data', function(data) {
+
+        success(data);
+    });
+
+    pyprog.stderr.on('data', (data) => {
+
+        nosuccess(data);
+    });
+});
+}
