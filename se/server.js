@@ -11,12 +11,13 @@ const app = new Koa();
 app.use(cors());
 app.use(koaBody({ multipart: true }));
 app.use(require('koa-static')('./mono_img_output'));
+app.use(require('koa-static')('./mono_video_output'));
 
 // 处理图片上传
-app.use(route.post('/backend/api/images', async (ctx) => {
+app.use(route.post('/backend/api/upload', async (ctx) => {
   await new Promise((res, rej) => {
     // 解析图片文件
-    const file = ctx.request.files.pic;
+    const file = ctx.request.files.upload;
     // 图片的存储路径
     // const savePath = path.join(__dirname, 'uploads', file.name);
     extname = path.extname(file.name);
@@ -37,10 +38,11 @@ app.use(route.post('/backend/api/images', async (ctx) => {
     });
     wstream.on('finish', async function () {
       try {
-        let { outputPath, inputPath } = await createPyProcess(savePath);
+        const isVideo = extname === '.mp4';
+        let { outputPath, inputPath } = await createPyProcess(savePath, isVideo);
         outputPath = path.basename(outputPath)
         inputPath = path.basename(inputPath)
-        ctx.body = { msg: 'success', outputPath, inputPath };
+        ctx.body = { msg: 'success', outputPath, inputPath, isVideo };
       } catch (err) {
         ctx.body = { msg: 'createPyProcess fail', data: err };
       }
@@ -53,15 +55,20 @@ app.use(route.post('/backend/api/images', async (ctx) => {
 app.listen(3000, () => console.log('listen on 3000'));
 
 
-function createPyProcess(targetPath) {
+function createPyProcess(targetPath, isVideo) {
   // https://medium.freecodecamp.org/node-js-child-processes-everything-you-need-to-know-e69498fe970a
   return new Promise(function (success, nosuccess) {
 
     const { spawn } = require('child_process');
-    const pyprog = spawn('python', ['../mono/mono_img.py', targetPath]);
+    let pyProcess;
+    if (isVideo) {
+      pyProcess = spawn('python', ['../mono/mono_video.py', targetPath]);
+    } else {
+      pyProcess = spawn('python', ['../mono/mono_img.py', targetPath]);
+    }
     let inputPath = '';
 
-    pyprog.stdout.on('data', function (data) {
+    pyProcess.stdout.on('data', function (data) {
       const pyStr = data.toString('utf8');
       const matchOutput = /(?:{-output-{)(.+)(?:}-output-})/.exec(pyStr);
       const matchInput = /(?:{-input-{)(.+)(?:}-input-})/.exec(pyStr);
@@ -69,18 +76,19 @@ function createPyProcess(targetPath) {
         console.log('success: ', matchOutput[1]);
         success({ outputPath: matchOutput[1], inputPath });
       } else if (matchInput && matchInput[1]) {
+        console.log('input path: ', matchInput[1]);
         inputPath = matchInput[1];
       } else {
         console.log('log: ', pyStr);
       }
     });
 
-    pyprog.stderr.on('data', (data) => {
+    pyProcess.stderr.on('data', (data) => {
       const errStr = data.toString('utf8');
       console.error('error:', errStr);
     });
 
-    pyprog.on('close', () => {
+    pyProcess.on('close', () => {
       console.error('child process closed.');
       nosuccess('no output');
     });

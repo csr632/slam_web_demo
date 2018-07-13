@@ -1,9 +1,16 @@
-<input type="file" name="pic" accept="image/*" #fileInput (change)="onFileChanged($event)">
+<input type="file" name="pic" accept=".png, .jpg, .mp4" #fileInput (change)="onFileChanged($event)">
+<p *ngIf="loading">正在处理，请耐心等待。图片大约需要半分钟，视频大约需要一分钟。</p>
 <div class="img-container" *ngIf="!!monoOneInputURL">
-    输入图片（经过预处理）：
-    <img src="http://localhost:3000/{{monoOneInputURL}}" />
-  </div>
+  输入图片（经过预处理）：
+  <img src="http://{{SERVER_ADDR}}/{{monoOneInputURL}}" />
+</div>
 <div class="img-container" *ngIf="!!monoOneResultURL">
   输出图片（可右键保存）：
-  <img src="http://localhost:3000/{{monoOneResultURL}}" />
+  <img src="http://{{SERVER_ADDR}}/{{monoOneResultURL}}" />
+</div>
+
+<div *ngIf="!!monoVideoResultUrl">
+  <video src="http://{{SERVER_ADDR}}/{{monoVideoResultUrl}}" controls="controls">
+    your browser does not support the video tag
+  </video>
 </div>

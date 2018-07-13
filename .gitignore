@@ -1,6 +1,9 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+se/mono_depth_frames
 se/mono_img_output
+se/mono_input_frames
+se/mono_video_output
 se/uploads
 mono/__pycache__
 

@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { SERVER_ADDR } from '../../../../config.js';
 
 @Component({
   selector: 'app-home',
@@ -9,6 +10,11 @@ import { HttpClient } from '@angular/common/http';
 export class HomeComponent implements OnInit {
   monoOneResultURL = '';
   monoOneInputURL = '';
+  monoVideoResultUrl = '';
+  loading = false;
+  SERVER_ADDR = SERVER_ADDR;
+
+
   constructor(private http: HttpClient) { }
 
   ngOnInit() {
@@ -16,14 +22,20 @@ export class HomeComponent implements OnInit {
 
   onFileChanged(e) {
     const file = e.target.files[0];
-    console.log(file);
+    this.monoOneInputURL = this.monoOneResultURL = this.monoVideoResultUrl = '';
     const uploadData = new FormData();
-    uploadData.append('pic', file, file.name);
-    this.http.post('http://localhost:3000/backend/api/images', uploadData)
+    uploadData.append('upload', file, file.name);
+    this.loading = true;
+    this.http.post(`http://${SERVER_ADDR}/backend/api/upload`, uploadData)
       .subscribe((res: any) => {
-        const { outputPath, inputPath } = res;
-        this.monoOneResultURL = outputPath;
-        this.monoOneInputURL = inputPath;
+        const { outputPath, inputPath, isVideo } = res;
+        if (isVideo) {
+          this.monoVideoResultUrl = outputPath;
+        } else {
+          this.monoOneResultURL = outputPath;
+          this.monoOneInputURL = inputPath;
+        }
+        this.loading = false;
       });
   }
 

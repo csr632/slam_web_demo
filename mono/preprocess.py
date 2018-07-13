@@ -1,4 +1,5 @@
 import cv2
+import os
 
 # https://stackoverflow.com/a/44659589
 def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
@@ -35,10 +36,10 @@ def image_resize(image, width = None, height = None, inter = cv2.INTER_AREA):
 def image_crop(image, width = None, height = None):
     (h, w) = image.shape[:2]
     if width is None or height is None:
-        print('you must give width and height!')
+        print('you must give width and height!', flush=True)
         return image
     if(width > w or height > h):
-        print('input must bigger than output!')
+        print('input must bigger than output!', flush=True)
         return image
     ystart = (h-height)//2
     xstart = (w-width)//2
@@ -46,13 +47,18 @@ def image_crop(image, width = None, height = None):
     crop_img = image[ystart:ystart+height, xstart:xstart+width]
     return crop_img
 
-# https://stackoverflow.com/a/33399711
-vidcap = cv2.VideoCapture('./videos/test.mp4')
-success,image = vidcap.read()
-count = 0
-while success:
-  cv2.imwrite("./result/frames/%d.jpg" % count, image_crop(image_resize(image, 416, 128),416, 128))
+def preprocess_video(video_path, frames_path, width, height):
+  # https://stackoverflow.com/a/33399711
+  vidcap = cv2.VideoCapture(video_path)
+  length = int(vidcap.get(cv2.CAP_PROP_FRAME_COUNT))
+  ratio = length//300
   success,image = vidcap.read()
-  count += 1
+  count = 0
+  while success:
+    if (count % ratio is 0):
+      cv2.imwrite(os.path.join(frames_path, "{:05}.jpg".format(count)),
+        image_crop(image_resize(image, width, height),width, height))
+    success,image = vidcap.read()
+    count += 1
 
-print('done. extract %d frames.', count)
+  print('preprocess video done. extract {} frames.'.format(count), flush=True)
