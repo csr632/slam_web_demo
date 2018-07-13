@@ -4,53 +4,46 @@ const os = require('os');
 const Koa = require('koa');
 const route = require('koa-route');
 const cors = require('@koa/cors');
-const koaBody = require('koa-body');
 const uuidv1 = require('uuid/v1');
+const multer = require('koa-multer');
 
 const app = new Koa();
+
+const storage = multer.diskStorage({
+  destination: './uploads/',
+  filename: function (req, file, cb) {
+    originalname = file.originalname;
+    extname = path.extname(originalname);
+    nameWithoutExt = originalname.slice(0, -1 * extname.length);
+    cb(null, `${nameWithoutExt}-${uuidv1()}${extname}`);
+  }
+})
+const upload = multer({ storage });
+
+app.use(async (ctx, next) => {
+  console.log(`${Date.now().toLocaleString()} have request`);
+  await next();
+  console.log(`${Date.now().toLocaleString()} response send`);
+});
 app.use(cors());
-app.use(koaBody({ multipart: true }));
 app.use(require('koa-static')('./fe-static'));
 app.use(require('koa-static')('./mono_img_output'));
 app.use(require('koa-static')('./mono_video_output'));
 
 // 处理图片上传
+app.use(route.post('/backend/api/upload', upload.single('upload')));
 app.use(route.post('/backend/api/upload', async (ctx) => {
-  await new Promise((res, rej) => {
-    // 解析图片文件
-    const file = ctx.request.files.upload;
-    // 图片的存储路径
-    // const savePath = path.join(__dirname, 'uploads', file.name);
-    extname = path.extname(file.name);
-    nameWithoutExt = file.name.slice(0, -1 * extname.length)
-    const savePath = path.join(__dirname, 'uploads', `${nameWithoutExt}-${uuidv1()}${extname}`);
-    console.log(savePath)
-    // 将图片从临时存储复制到存储路径
-    const reader = fs.createReadStream(file.path);
-    const wstream = fs.createWriteStream(savePath, { flags: 'wx' });
-    wstream.on('error', function (err) {
-      if (err.code === 'EEXIST') {
-        // 同名图片已经存在
-        ctx.body = { msg: 'exist' };
-        res();
-      } else {
-        rej(err);
-      }
-    });
-    wstream.on('finish', async function () {
-      try {
-        const isVideo = extname === '.mp4';
-        let { outputPath, inputPath } = await createPyProcess(savePath, isVideo);
-        outputPath = path.basename(outputPath)
-        inputPath = path.basename(inputPath)
-        ctx.body = { msg: 'success', outputPath, inputPath, isVideo };
-      } catch (err) {
-        ctx.body = { msg: 'createPyProcess fail', data: err };
-      }
-      res();
-    });
-    reader.pipe(wstream);
-  });
+  console.log(ctx.req.file.path);
+  const savePath = ctx.req.file.path;
+  const isVideo = extname === '.mp4';
+  try {
+    let { outputPath, inputPath } = await createPyProcess(savePath, isVideo);
+    outputPath = path.basename(outputPath)
+    inputPath = path.basename(inputPath)
+    ctx.body = { msg: 'success', outputPath, inputPath, isVideo };
+  } catch (err) {
+    ctx.body = { msg: 'createPyProcess fail', data: err };
+  }
 }));
 
 app.listen(3000, () => console.log('listen on 3000'));
