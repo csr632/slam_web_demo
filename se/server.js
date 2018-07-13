@@ -10,6 +10,7 @@ const uuidv1 = require('uuid/v1');
 const app = new Koa();
 app.use(cors());
 app.use(koaBody({ multipart: true }));
+app.use(require('koa-static')('./fe-static'));
 app.use(require('koa-static')('./mono_img_output'));
 app.use(require('koa-static')('./mono_video_output'));
 
