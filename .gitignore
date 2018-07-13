@@ -1,5 +1,9 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
+se/mono_img_output
+se/uploads
+mono/__pycache__
+
 # compiled output
 fe/dist
 fe/tmp

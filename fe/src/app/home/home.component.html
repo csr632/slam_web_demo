@@ -1,1 +1,9 @@
 <input type="file" name="pic" accept="image/*" #fileInput (change)="onFileChanged($event)">
+<div class="img-container" *ngIf="!!monoOneInputURL">
+    输入图片（经过预处理）：
+    <img src="http://localhost:3000/{{monoOneInputURL}}" />
+  </div>
+<div class="img-container" *ngIf="!!monoOneResultURL">
+  输出图片（可右键保存）：
+  <img src="http://localhost:3000/{{monoOneResultURL}}" />
+</div>

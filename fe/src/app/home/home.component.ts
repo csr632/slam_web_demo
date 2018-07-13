@@ -7,7 +7,8 @@ import { HttpClient } from '@angular/common/http';
   styleUrls: ['./home.component.css']
 })
 export class HomeComponent implements OnInit {
-
+  monoOneResultURL = '';
+  monoOneInputURL = '';
   constructor(private http: HttpClient) { }
 
   ngOnInit() {
@@ -19,8 +20,10 @@ export class HomeComponent implements OnInit {
     const uploadData = new FormData();
     uploadData.append('pic', file, file.name);
     this.http.post('http://localhost:3000/backend/api/images', uploadData)
-      .subscribe((res) => {
-        console.log(res);
+      .subscribe((res: any) => {
+        const { outputPath, inputPath } = res;
+        this.monoOneResultURL = outputPath;
+        this.monoOneInputURL = inputPath;
       });
   }
 
