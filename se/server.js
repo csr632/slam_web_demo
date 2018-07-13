@@ -47,7 +47,9 @@ app.use(route.post('/backend/api/upload', async (ctx) => {
 }));
 
 app.listen(3000, () => console.log('listen on 3000'));
-
+app.on('error', (err, ctx) => {
+  console.error('server error', err, ctx)
+});
 
 function createPyProcess(targetPath, isVideo) {
   // https://medium.freecodecamp.org/node-js-child-processes-everything-you-need-to-know-e69498fe970a
